@@ -10,6 +10,8 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven("https://hub.spigotmc.org/nexus/content/groups/public/")
+
+    maven("https://repo.codemc.org/repository/maven-public")//nbt-api
 }
 sourceSets {
     main {
@@ -17,10 +19,16 @@ sourceSets {
     }
 }
 dependencies {
-    implementation("cf.wayzer:ScriptAgent4Bukkit:1.0-c5444cb")
+    //This is develop snap version,please use release version
+    implementation("cf.wayzer:ScriptAgent4Bukkit:1.0-a447f18-DIRTY")
     implementation(kotlin("script-runtime"))
+    implementation(kotlin("scripting-common"))//Needed for find @KotlinScript annotation when run init.kts
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.spigotmc:spigot-api:$mc_version")
+
+    //used by superitem
+    implementation("de.tr7zw:item-nbt-api:2.2.0")
+    implementation("org.mapdb:mapdb:3.0.7")
 }
 
 tasks {
