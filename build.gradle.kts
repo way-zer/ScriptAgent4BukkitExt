@@ -4,11 +4,13 @@ plugins {
 
 group = "cf.wayzer"
 version = "1.0-SNAPSHOT"
-val mc_version = "1.14-R0.1-SNAPSHOT"
+val pluginVersion = "1.0.2"
+val mcVersion = "1.14-R0.1-SNAPSHOT"
 
 repositories {
     mavenLocal()
     mavenCentral()
+    maven("https://dl.bintray.com/way-zer/maven")
     maven("https://hub.spigotmc.org/nexus/content/groups/public/")
 
     maven("https://repo.codemc.org/repository/maven-public")//nbt-api
@@ -19,12 +21,12 @@ sourceSets {
     }
 }
 dependencies {
-    //This is develop snap version,please use release version
-    implementation("cf.wayzer:ScriptAgent4Bukkit:1.0-a447f18-DIRTY")
+    implementation("cf.wayzer:ScriptAgent4Bukkit:$pluginVersion")
     implementation(kotlin("script-runtime"))
     implementation(kotlin("scripting-common"))//Needed for find @KotlinScript annotation when run init.kts
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.spigotmc:spigot-api:$mc_version")
+    //也可以直接使用服务器正在使用的jar(使用NMS等)
+    implementation("org.spigotmc:spigot-api:$mcVersion")
 
     //used by superitem
     implementation("de.tr7zw:item-nbt-api:2.2.0")
