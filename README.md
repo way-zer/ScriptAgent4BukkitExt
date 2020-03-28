@@ -1,6 +1,7 @@
 [ ![Download](https://api.bintray.com/packages/way-zer/maven/cf.wayzer%3AScriptAgent4Bukkit/images/download.svg) ](https://bintray.com/way-zer/maven/cf.wayzer%3AScriptAgent4Bukkit/_latestVersion)
 # ScriptAgent for Bukkit
-一个强大的脚本插件,基于kts定义的DSL
+一个强大的脚本插件,基于kts定义的DSL  
+A strong script plugin for kts(for english README see [me](./README_en.md))
 
 ## 特性
 - 强大,基于kotlin,可以访问所有Java接口(所有插件能干的，脚本都能干)
