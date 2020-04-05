@@ -1,2 +1,2 @@
-rootProject.name = "ScriptAgent4BukkitExt"
+rootProject.name = "ScriptAgent4Bukkit"
 

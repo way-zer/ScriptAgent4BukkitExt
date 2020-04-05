@@ -1,0 +1,10 @@
+name: ScriptAgent
+main: cf.wayzer.script_agent.ScriptAgent4Bukkit
+version: @version@
+author: Way__Zer
+description: description!
+commands: 
+  ScriptAgent:
+    description: ScriptAgent Main Command
+    usage: /ScriptAgent help
+    aliases: ["sa"]
