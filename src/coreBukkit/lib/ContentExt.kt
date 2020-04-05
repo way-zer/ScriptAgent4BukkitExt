@@ -7,9 +7,7 @@ import coreBukkit.lib.ContentExt.bukkitTasks
 import coreBukkit.lib.ContentExt.commands
 import coreBukkit.lib.ContentExt.listens
 import coreBukkit.lib.ContentExt.subCommands
-import cf.wayzer.script_agent.content.ContentScript
 import cf.wayzer.script_agent.util.DSLBuilder.Companion.dataKeyWithDefault
-import cf.wayzer.script_agent.util.ScheduleTask
 import org.bukkit.command.Command
 import org.bukkit.command.CommandException
 import org.bukkit.command.CommandSender
@@ -50,11 +48,6 @@ object ContentExt {
             }
         }
     }
-
-    data class TaskData(
-        val task: ScheduleTask<*>,
-        val autoCancel: Boolean = true
-    )
 
     val IContentScript.listener by dataKeyWithDefault { ScriptListener() }
     val IContentScript.subCommands by dataKeyWithDefault { mutableListOf<ScriptCommand>() }
