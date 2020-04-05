@@ -7,7 +7,6 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import superitem.lib.Feature
-import superitem.lib.clsName
 import superitem.lib.events.ItemStackHandleEvent
 
 /**
@@ -25,7 +24,8 @@ class ItemInfo(
         private val defaultDamage: Short = 0,
         private val loadOther: (ItemMeta, ItemStack) -> Unit = { _, _ -> }
 ) : Feature<ItemInfo.Data>(), Feature.OnPostLoad {
-    interface ItemStackHandler : ((ItemStack,Player?)->Unit)
+    interface ItemStackHandler : ((ItemStack, Player?) -> Unit)
+
     /**
      * ItemStack初始化模板
      */
@@ -46,13 +46,13 @@ class ItemInfo(
      * Create an ItemStack using Template and Handlers
      * @param p the player crafting
      */
-    fun newItemStack(p:Player?=null):ItemStack{
+    fun newItemStack(p: Player? = null): ItemStack {
         val itemStack = itemStackTemplate.clone()
-        itemStackHandlers.forEach { it(itemStack,p) }
-        Bukkit.getServer().pluginManager.callEvent(ItemStackHandleEvent(itemStack,p))
+        itemStackHandlers.forEach { it(itemStack, p) }
+        Bukkit.getServer().pluginManager.callEvent(ItemStackHandleEvent(itemStack, p))
         itemStack.itemMeta = itemStack.itemMeta?.apply {
-            setDisplayName(displayName.replace("&","§"))
-            lore = lore?.map { it.replace("&","§") }
+            setDisplayName(displayName.replace("&", "§"))
+            lore = lore?.map { it.replace("&", "§") }
         }
         return itemStack
     }
@@ -61,7 +61,7 @@ class ItemInfo(
      * Handler when an itemStack creates
      * Don't work with Recipe and Texture
      */
-    fun registerHandler(handler: ItemStackHandler)=itemStackHandlers.add(handler)
+    fun registerHandler(handler: ItemStackHandler) = itemStackHandlers.add(handler)
 
     override fun onPostLoad() {
         val itemStack = ItemStack(data.material, 1)
@@ -73,7 +73,7 @@ class ItemInfo(
         loadOther(im, itemStack)
         itemStack.itemMeta = im
         val nbt = NBT.API.readOrCreate(itemStack)
-        nbt.setString(NBT_TAG_NAME,item.clsName)
+        nbt.setString(NBT_TAG_NAME, item.clsName)
         NBT.API.write(itemStack, nbt)
 
         this.itemStackTemplate = itemStack
@@ -95,11 +95,11 @@ class ItemInfo(
         return true
     }
 
-    fun drop(location: Location, player: Player?=null){
-        location.world?.dropItem(location,newItemStack(player))
+    fun drop(location: Location, player: Player? = null) {
+        location.world?.dropItem(location, newItemStack(player))
     }
 
     companion object {
-        const val NBT_TAG_NAME="SICN"
+        const val NBT_TAG_NAME = "SICN"
     }
 }

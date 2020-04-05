@@ -1,6 +1,6 @@
 package superitem.lib.features
 
-import cf.wayzer.script_agent.bukkit.logger
+import coreBukkit.lib.logger
 import de.tr7zw.changeme.nbtapi.NBTCompound
 import de.tr7zw.changeme.nbtapi.NBTItem
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion
@@ -77,16 +77,19 @@ class NBT(override vararg val defaultData: AttributeModifier) : Feature<Array<ou
             MinecraftVersion.disableUpdateCheck()
             MinecraftVersion.disableBStats()
         }
+
         fun read(item: ItemStack): NBTCompound? = NBTItem(item).let { if (it.hasNBTData()) it else null }
         fun readOrCreate(item: ItemStack): NBTCompound = NBTItem(item)
-        fun write(item: ItemStack,nbt:NBTCompound){
+        fun write(item: ItemStack, nbt: NBTCompound) {
             item.itemMeta = (nbt as NBTItem).item.itemMeta
         }
-        operator fun NBTCompound.set(key:String,v:Int) {
-            setInteger(key,v)
+
+        operator fun NBTCompound.set(key: String, v: Int) {
+            setInteger(key, v)
         }
-        operator fun NBTCompound.set(key:String,v:String) {
-            setString(key,v)
+
+        operator fun NBTCompound.set(key: String, v: String) {
+            setString(key, v)
         }
     }
 

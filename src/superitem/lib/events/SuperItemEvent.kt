@@ -7,12 +7,12 @@ import org.bukkit.event.HandlerList
 /**
  * Use for script custom event
  */
-data class SuperItemEvent(val type:String,private var data:Any) : Event(), Cancellable {
+data class SuperItemEvent(val type: String, private var data: Any) : Event(), Cancellable {
     init {
         try {
-            Class.forName(data::class.java.name,false,SuperItemEvent::class.java.classLoader)
-        }catch (e: Exception){
-            throw Error("Can only use common Type as data",e)
+            Class.forName(data::class.java.name, false, SuperItemEvent::class.java.classLoader)
+        } catch (e: Exception) {
+            throw Error("Can only use common Type as data", e)
         }
     }
 
@@ -20,6 +20,7 @@ data class SuperItemEvent(val type:String,private var data:Any) : Event(), Cance
     operator fun <T> invoke(): T {
         return data as T
     }
+
     private var isCancelled = false
     override fun getHandlers(): HandlerList {
         return handlerList
@@ -32,7 +33,8 @@ data class SuperItemEvent(val type:String,private var data:Any) : Event(), Cance
     override fun isCancelled(): Boolean {
         return isCancelled
     }
-    companion object{
+
+    companion object {
         val handlerList = HandlerList()
     }
 }

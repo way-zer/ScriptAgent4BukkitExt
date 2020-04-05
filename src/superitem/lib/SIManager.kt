@@ -1,14 +1,11 @@
 package superitem.lib
 
-import cf.wayzer.script_agent.util.DSLKey
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import superitem.lib.features.NBT
-import kotlin.reflect.KClass
 
 object SIManager {
     val items = mutableMapOf<String, Item>()
-    val features by DSLKey.dataKeyWithDefault{mutableMapOf<KClass<*>, MutableList<Feature<*>>>()}
 
     /**
      * 通过 ItemStack 获取 Item

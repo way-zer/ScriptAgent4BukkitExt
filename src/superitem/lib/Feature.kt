@@ -1,14 +1,12 @@
 package superitem.lib
 
-import cf.wayzer.script_agent.BukkitPlugin
-import cf.wayzer.script_agent.IContentScript
-import cf.wayzer.script_agent.IInitScript
 import org.bukkit.event.Listener
 
 abstract class Feature<H> where H : Any {
-    open fun bind(item: Item){
+    open fun bind(item: Item) {
         this.item = item
     }
+
     /**
      * 当此Feature加载完时调用
      */
@@ -33,10 +31,11 @@ abstract class Feature<H> where H : Any {
      */
     protected lateinit var item: Item
     abstract val defaultData: H?
+
     /**
      * Feature的配置信息
      */
     lateinit var data: H
-    val name:String
+    val name: String
         get() = javaClass.simpleName
 }

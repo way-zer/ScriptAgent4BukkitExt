@@ -1,11 +1,10 @@
 package superitem
 
-import cf.wayzer.script_agent.bukkit.command
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
-name.set("SuperItem 命令控制脚本")
+name = "SuperItem 命令控制脚本"
 
 command("superitem", "SuperItem管理命令", "<list/get/give> [arg]", listOf("si")) { s, arg ->
     if (arg.isEmpty()) return@command help(s)
@@ -46,8 +45,8 @@ fun listItem(s: CommandSender, args: Array<out String>) {
     s.sendMessage("§a=========== §b已开启  Item 列表 §a============")
     var i = pages * 10 - 10
     while (i < list.size && i < pages * 10) {
-        val itemName = if(! list[i].second.has<ItemInfo>())"§c NO_ITEM"
-            else list[i].second.get<ItemInfo>().newItemStack().itemMeta?.displayName
+        val itemName = if (!list[i].second.has<ItemInfo>()) "§c NO_ITEM"
+        else list[i].second.get<ItemInfo>().newItemStack().itemMeta?.displayName
         s.sendMessage(String.format("§e%03d §a|§e %-20s §a|§e %s",
                 i, list[i].first, itemName))
         i++
@@ -60,7 +59,7 @@ fun getItem(s: CommandSender, args: Array<out String>) {
     if (s !is Player) return s.sendMessage("§c不能使用控制台运行")
     if (!s.hasPermission("SuperItem.command.get")) return s.sendMessage("§c没有权限")
     val item = getItemByNameOrID(args[1]) ?: return s.sendMessage("§c请输入正确的ID")
-    if(!item.has<ItemInfo>())return s.sendMessage("§c没有实体物品可以获取")
+    if (!item.has<ItemInfo>()) return s.sendMessage("§c没有实体物品可以获取")
     if (item.get<ItemInfo>().givePlayer(s))
         s.sendMessage("§a获取成功")
 }
@@ -70,7 +69,7 @@ fun giveItem(s: CommandSender, args: Array<out String>) {
     if (!s.hasPermission("SuperItem.command.give")) return s.sendMessage("§c没有权限")
     val player = Bukkit.getPlayer(args[2]) ?: return s.sendMessage("§c找不到玩家")
     val item = getItemByNameOrID(args[1]) ?: return s.sendMessage("§c请输入正确的ID")
-    if(!item.has<ItemInfo>())return s.sendMessage("§c没有实体物品可以获取")
+    if (!item.has<ItemInfo>()) return s.sendMessage("§c没有实体物品可以获取")
     if (item.get<ItemInfo>().givePlayer(player))
         s.sendMessage("§a给予成功")
     else {

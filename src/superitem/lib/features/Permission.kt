@@ -1,7 +1,8 @@
 package superitem.lib.features
 
-import cf.wayzer.script_agent.bukkit.Manager.pluginMain
-import cf.wayzer.script_agent.bukkit.listen
+import cf.wayzer.script_agent.Config
+import coreBukkit.lib.listen
+import coreBukkit.lib.pluginMain
 import net.md_5.bungee.api.ChatMessageType
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
@@ -16,7 +17,9 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.inventory.CraftItemEvent
-import superitem.lib.*
+import superitem.lib.Feature
+import superitem.lib.Item
+import superitem.lib.isItem
 
 /**
  * **自动Require
@@ -35,7 +38,7 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
             p.hasPermission(data) -> true
             else -> {
                 if (tip)
-                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR,TextComponent("§c你没有权限使用"))
+                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent("§c你没有权限使用"))
                 false
             }
         }
@@ -43,14 +46,14 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
 
     override fun bind(item: Item) {
         super.bind(item)
-        item.listen<CraftItemEvent>(true) {e->
+        item.listen<CraftItemEvent>(true) { e ->
             if (item.isItem(e.recipe.result) && !hasPermission(e.whoClicked as Player, false)) {
                 e.whoClicked.sendMessage("§c你没有权限合成这个物品")
                 e.isCancelled = true
             }
         }
         item.listen<BlockPlaceEvent>(true) {
-            if(item.isItem(it.itemInHand))it.isCancelled = true
+            if (item.isItem(it.itemInHand)) it.isCancelled = true
         }
     }
 
@@ -63,12 +66,12 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
          * @sample checkEvent(BlockBreakEvent(block,player)) 判断是否能删除方块
          * @sample checkEvent(EntityDamageByEntityEvent(player,target,ENTITY_ATTACK,1)) 判断是否能否攻击玩家
          */
-        fun checkEvent(event: Event):Boolean{
-            return if(event is Cancellable) {
+        fun checkEvent(event: Event): Boolean {
+            return if (event is Cancellable) {
                 Bukkit.getServer().pluginManager.callEvent(event)
                 !event.isCancelled
-            }else{
-                pluginMain.logger.warning("Event ${event.eventName} is not Cancellable,don't need to check")
+            } else {
+                Config.pluginMain.logger.warning("Event ${event.eventName} is not Cancellable,don't need to check")
                 true
             }
         }
@@ -77,18 +80,18 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
          * 检测某人能否破坏方块
          * @see checkEvent
          */
-        fun Player.canBreakBlock(block: Block):Boolean{
-            return checkEvent(BlockBreakEvent(block,this))
+        fun Player.canBreakBlock(block: Block): Boolean {
+            return checkEvent(BlockBreakEvent(block, this))
         }
 
         /**
          * 检测某人能否伤害生物(包括人)
          * @see checkEvent
          */
-        fun Player.canDamage(entity: Entity):Boolean{
+        fun Player.canDamage(entity: Entity): Boolean {
             @Suppress("DEPRECATION")
-            val event = EntityDamageByEntityEvent(this,entity, EntityDamageEvent.DamageCause.ENTITY_ATTACK,2.0)
-            return checkEvent(event) &&event.damage>=1.0
+            val event = EntityDamageByEntityEvent(this, entity, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 2.0)
+            return checkEvent(event) && event.damage >= 1.0
         }
     }
 }
