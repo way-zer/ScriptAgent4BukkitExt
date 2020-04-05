@@ -1,7 +1,4 @@
-@file:ImportByClass("org.bukkit.Bukkit")
+@file:DependsModule("coreBukkit")
 
-import cf.wayzer.script_agent.bukkit.Helper.baseConfig
-
-name.set("ScriptAgent 主模块")
-baseConfig()
+name="ScriptAgent 主模块"
 generateHelper()
