@@ -24,7 +24,13 @@ addDefaultImport("org.bukkit.ChatColor.*")
 generateHelper()
 
 onEnable{
+    DataStoreApi.open(Config.pluginMain.dataFolder.resolve("dataStore.db").path)
+    ConfigBuilder.init(Config.pluginMain.dataFolder.resolve("config.conf"))
     Config.pluginCommand.setExecutor(PluginCommander)
+}
+
+onDisable{
+    DataStoreApi.close()
 }
 
 onAfterContentEnable { child ->

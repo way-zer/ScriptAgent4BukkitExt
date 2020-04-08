@@ -1,5 +1,12 @@
+@file:Suppress("unused")
+
 package coreLibrary.lib
 
+/**
+ * 异步Api
+ * 目前有两种异步接口
+ * Timer和协程
+ */
 import kotlinx.coroutines.*
 import java.util.*
 
