@@ -38,17 +38,17 @@ object PlaceHold {
     /**
      * @param v support [cf.wayzer.placehold.DynamicVar] even [PlaceHoldString] or any value
      */
-    fun IBaseScript.register(name: String, desc: String, v: Any?) {
+    fun register(script: IBaseScript,name: String, desc: String, v: Any?) {
         PlaceHoldApi.registerGlobalVar(name, v)
-        registeredVars[name]=desc
+        script.registeredVars[name]=desc
     }
 
     /**
      * @see TypeBinder
      * @param desc describe what you want to add
      */
-    inline fun <reified T:Any> IBaseScript.registerForType(desc: String): TypeBinder<T> {
-        registeredVars["Type@${T::class.java.simpleName}"] = desc
+    inline fun <reified T:Any> registerForType(script: IBaseScript,desc: String): TypeBinder<T> {
+        script.registeredVars["Type@${T::class.java.simpleName}"] = desc
         return PlaceHoldApi.typeBinder()
     }
     /**
@@ -70,3 +70,12 @@ object PlaceHold {
  * @param arg values support [cf.wayzer.placehold.DynamicVar] even [PlaceHoldString] or any value
  */
 fun String.with(vararg arg: Pair<String, Any>): PlaceHoldString = PlaceHoldApi.getContext(this, arg.toMap())
+
+/**
+ * @see PlaceHold.register
+ */
+fun IBaseScript.registerVar(name: String, desc: String, v: Any?) = PlaceHold.register(this,name, desc, v)
+/**
+ * @see PlaceHold.referenceForType
+ */
+inline fun <reified T : Any> IBaseScript.registerVarForType(desc: String) = PlaceHold.registerForType<T>(this, desc)
