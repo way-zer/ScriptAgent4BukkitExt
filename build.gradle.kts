@@ -6,7 +6,7 @@ plugins {
 
 group = "cf.wayzer"
 version = "v1.x.x" //采用3位版本号v1.2.3 1为大版本 2为插件版本 3为脚本版本
-val libraryVersion = "1.1.3"
+val libraryVersion = "1.2.8"
 val mcVersion = "1.14-R0.1-SNAPSHOT"
 
 gitVersioning.apply(closureOf<me.qoomon.gradle.gitversioning.GitVersioningPluginConfig> {
@@ -21,6 +21,7 @@ gitVersioning.apply(closureOf<me.qoomon.gradle.gitversioning.GitVersioningPlugin
 
 repositories {
     mavenLocal()
+    jcenter()
     mavenCentral()
     maven("https://dl.bintray.com/way-zer/maven")
     maven("https://hub.spigotmc.org/nexus/content/groups/public/")
@@ -28,7 +29,7 @@ repositories {
     maven("https://repo.codemc.org/repository/maven-public")//nbt-api
     maven("https://dl.bintray.com/config4k/config4k")//config4k
 }
-sourceSets {
+sourceSets{
     main {
         java.srcDir("src")
     }
@@ -50,9 +51,11 @@ dependencies {
     implementation("org.mapdb:mapdb:3.0.7")
 
     //coreLibrary
-    api("cf.wayzer:PlaceHoldLib:2.0")
+    api("cf.wayzer:PlaceHoldLib:2.1.0")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1")
-    implementation("com.h2database:h2-mvstore:1.4.200")
+    implementation("org.jetbrains.exposed:exposed-core:0.24.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.24.1")
+    implementation("org.jetbrains.exposed:exposed-java-time:0.24.1")
     implementation("io.github.config4k:config4k:0.4.1")
 }
 

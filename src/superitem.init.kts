@@ -2,6 +2,7 @@
 @file:MavenDepends("de.tr7zw:item-nbt-api:2.2.0", "https://repo.codemc.org/repository/maven-public/")
 
 import cf.wayzer.script_agent.Config
+import coreLibrary.lib.dataDirectory
 import superitem.lib.*
 import superitem.lib.events.ItemStackHandleEvent
 import superitem.lib.events.SuperItemEvent
@@ -19,7 +20,7 @@ generateHelper()
 onEnable {
     val rootDir = Config.pluginMain.dataFolder.resolve("Superitem")
     rootDir.mkdirs()
-    ConfigManager.init(rootDir.resolve("config"))
+    ConfigManager.init(Config.dataDirectory.resolve("superitem"))
 }
 
 onBeforeContentEnable { item ->

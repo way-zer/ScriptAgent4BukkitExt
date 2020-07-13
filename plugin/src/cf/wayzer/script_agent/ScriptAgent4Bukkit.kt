@@ -2,7 +2,6 @@ package cf.wayzer.script_agent
 
 import cf.wayzer.script_agent.ConfigExt.pluginCommand
 import cf.wayzer.script_agent.ConfigExt.pluginMain
-import cf.wayzer.script_agent.ConfigExt.scriptManager
 import org.bukkit.plugin.java.JavaPlugin
 
 class ScriptAgent4Bukkit : JavaPlugin() {
@@ -12,12 +11,13 @@ class ScriptAgent4Bukkit : JavaPlugin() {
     override fun onEnable() {
         val dir = dataFolder
         if(!dir.exists())dir.mkdirs()
+        Config.logger = logger
         Config.pluginMain = this
         Config.pluginCommand = getCommand("ScriptAgent")
-        Config.scriptManager.loadDir(dir)
+        ScriptManager.loadDir(dir)
     }
 
     override fun onDisable() {
-        Config.scriptManager.disableAll()
+        ScriptManager.disableAll()
     }
 }
