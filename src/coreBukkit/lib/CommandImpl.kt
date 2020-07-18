@@ -14,17 +14,18 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
+import org.bukkit.entity.Player
 
 object RootCommands : Commands() {
     class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases), CommandExecutor {
         override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
             info.invoke(CommandContext().apply {
-                reply = {msg->
+                reply = { msg ->
                     "{msg}".with("msg" to msg, "player" to sender).toString().let {
-                        ColorApi.handle(it,::minecraftColorHandler)
+                        ColorApi.handle(it, ::minecraftColorHandler)
                     }.let(sender::sendMessage)
                 }
-                player = sender
+                this.sender = sender
                 thisCommand = info
                 prefix = commandLabel
                 arg = args.toList()
@@ -63,13 +64,13 @@ object RootCommands : Commands() {
     init {
         RootCommands::class.java.getContextModule()!!.apply {
             listenTo<PermissionRequestEvent> {
-                if (context.player != null)
-                    result = context.player!!.hasPermission(permission)
+                if(context.sender!=null)
+                    result = context.sender!!.hasPermission(permission)
             }
         }
     }
 
-    fun minecraftColorHandler(color: ColorApi.Color): String{
+    fun minecraftColorHandler(color: ColorApi.Color): String {
         return when (color) {
             ConsoleColor.RESET -> ChatColor.RESET
             ConsoleColor.BOLD -> ChatColor.BOLD
@@ -94,4 +95,5 @@ object RootCommands : Commands() {
     }
 }
 
-var CommandContext.player by DSLBuilder.dataKey<CommandSender>()
+var CommandContext.sender by DSLBuilder.dataKey<CommandSender>()
+val CommandContext.player get() = sender as? Player

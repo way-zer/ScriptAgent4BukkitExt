@@ -66,8 +66,8 @@ fun IContentScript.command(
         this.usage = usage
         this.aliases = aliases
     }) {
-        if (player != null)
-            executor(player!!, arg.toTypedArray())
+        if (sender != null)
+            executor(sender!!, arg.toTypedArray())
     }
     (if (asSub) subCommands else commands).add(cmd)
 }
