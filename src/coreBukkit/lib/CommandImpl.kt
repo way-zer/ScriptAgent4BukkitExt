@@ -10,14 +10,12 @@ import cf.wayzer.script_agent.util.DSLBuilder
 import coreLibrary.lib.*
 import coreLibrary.lib.event.PermissionRequestEvent
 import org.bukkit.ChatColor
-import org.bukkit.command.Command
-import org.bukkit.command.CommandExecutor
-import org.bukkit.command.CommandSender
-import org.bukkit.command.SimpleCommandMap
+import org.bukkit.Location
+import org.bukkit.command.*
 import org.bukkit.entity.Player
 
 object RootCommands : Commands() {
-    class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases), CommandExecutor {
+    class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases), CommandExecutor, TabCompleter {
         override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
             info.invoke(CommandContext().apply {
                 reply = { msg ->
@@ -26,22 +24,41 @@ object RootCommands : Commands() {
                     }.let(sender::sendMessage)
                 }
                 this.sender = sender
-                thisCommand = info
-                prefix = commandLabel
+                prefix = "/$commandLabel"
                 arg = args.toList()
             })
             return true
         }
 
+        override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>, location: Location?): List<String> {
+            var result: List<String> = emptyList()
+            info.invoke(CommandContext().apply {
+                this.sender = sender
+                replyTabComplete = { result = it;CommandInfo.Return() }
+                prefix = "/$alias"
+                arg = args.toList()
+            })
+            return result
+        }
+
         override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
             return execute(sender, label, args)
+        }
+
+        override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
+            return tabComplete(sender, alias, args, null)
         }
     }
 
     override fun addSub(command: CommandInfo) {
         if (command.name == "help") return
         if (command.name == "ScriptAgent")
-            return Config.pluginCommand.setExecutor(BukkitCommand(command))
+            return Config.pluginCommand.run {
+                BukkitCommand(command).let {
+                    setExecutor(it)
+                    tabCompleter = it
+                }
+            }
         ModuleExt.getCommandMap().run {
             register(Config.pluginMain.description.name, BukkitCommand(command))
         }
@@ -64,7 +81,7 @@ object RootCommands : Commands() {
     init {
         RootCommands::class.java.getContextModule()!!.apply {
             listenTo<PermissionRequestEvent> {
-                if(context.sender!=null)
+                if (context.sender != null)
                     result = context.sender!!.hasPermission(permission)
             }
         }
