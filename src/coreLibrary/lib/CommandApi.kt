@@ -57,6 +57,11 @@ class CommandContext : DSLBuilder() {
             replyTabComplete?.invoke(body())
     }
 
+    fun endComplete(){
+        if(replyTabComplete!=null)
+            CommandInfo.Return()
+    }
+
     //return null if empty or no match
     fun <T> checkArg(index: Int, list: List<T>, map: (T) -> String): T? {
         onComplete(index){list.map(map)}
@@ -85,6 +90,7 @@ class CommandInfo(val script: IContentScript?, val name: String, val description
     var usage = ""
     var aliases = emptyList<String>()
     var permission = ""
+    var supportCompletion = false
 
     init {
         init()
@@ -92,6 +98,8 @@ class CommandInfo(val script: IContentScript?, val name: String, val description
 
     override fun invoke(context: CommandContext) {
         context.thisCommand = this
+        if(handler !is Commands && !supportCompletion)
+            context.endComplete()
         if (permission.isNotBlank() && !context.hasPermission(permission))
             return context.replyNoPermission()
         try {

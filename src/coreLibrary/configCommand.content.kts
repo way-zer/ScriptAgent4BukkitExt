@@ -8,9 +8,11 @@ onEnable {
         addSub(CommandInfo(thisRef, "config", "查看或修改配置", {
             usage="[help/arg...]"
             permission = "scriptAgent.config"
+            supportCompletion = true
         }) {
             onComplete(0){ listOf("help","reload")+ConfigBuilder.all.keys }
             onComplete(1){ listOf("set","write","reset") }
+            endComplete()
             if (arg.isEmpty() || arg[0].equals("help", true)) return@CommandInfo reply("""
                         [yellow]可用操作
                         [purple]config reload [light_purple]重载配置文件

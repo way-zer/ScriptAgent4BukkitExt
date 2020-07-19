@@ -11,11 +11,13 @@ onEnable {
         addSub(CommandInfo(thisRef, "info", "获取一个脚本的具体信息", {
             usage = "<module[/script]>"
             permission = "scriptAgent.info"
+            supportCompletion = true
         }) {
             onComplete(0) {
                 (arg[0].split('/')[0].let(ScriptManager::getScript)?.let { it as IInitScript }?.children
                         ?: ScriptManager.loadedInitScripts.values).map { it.id }
             }
+            endComplete()
             if (arg.isEmpty()) return@CommandInfo replyUsage()
             val script = ScriptManager.getScript(arg[0]) ?: return@CommandInfo reply("[red]找不到脚本,请确定加载成功,并输入正确".with())
 
