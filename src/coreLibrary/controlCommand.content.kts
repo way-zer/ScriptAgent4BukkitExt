@@ -13,6 +13,9 @@ onEnable {
             usage = "[module]"
             permission = "scriptAgent.control.list"
         }) {
+            onComplete(0){
+                ScriptManager.loadedInitScripts.values.map { it.id }
+            }
             if (arg.isEmpty()) {
                 val list = ScriptManager.loadedInitScripts.values.map {
                     val enable = if (it.enabled) "purple" else "reset"
@@ -50,6 +53,11 @@ onEnable {
             usage = "<module[/script]>"
             permission = "scriptAgent.control.reload"
         }) {
+            onComplete(0) {
+                (arg[0].split('/')[0].let(ScriptManager::getScript)?.let { it as IInitScript }?.children
+                        ?: ScriptManager.loadedInitScripts.values).map { it.id }
+            }
+            if (arg.isEmpty())return@CommandInfo replyUsage()
             GlobalScope.launch {
                 reply("[yellow]异步处理中".with())
                 val success: Boolean = when (val script = arg.getOrNull(0)?.let(ScriptManager::getScript)) {
