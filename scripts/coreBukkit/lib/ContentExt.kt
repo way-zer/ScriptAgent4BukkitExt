@@ -3,13 +3,12 @@
 package coreBukkit.lib
 
 import cf.wayzer.script_agent.Config
-import cf.wayzer.script_agent.IContentScript
+import cf.wayzer.script_agent.ISubScript
 import cf.wayzer.script_agent.util.DSLBuilder.Companion.dataKeyWithDefault
 import coreBukkit.lib.ContentExt.bukkitTasks
 import coreBukkit.lib.ContentExt.commands
 import coreBukkit.lib.ContentExt.listens
 import coreBukkit.lib.ContentExt.subCommands
-import coreLibrary.lib.CommandContext
 import coreLibrary.lib.CommandInfo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -45,16 +44,16 @@ object ContentExt {
         }
     }
 
-    val IContentScript.listener by dataKeyWithDefault { ScriptListener() }
-    val IContentScript.subCommands by dataKeyWithDefault { mutableListOf<CommandInfo>() }
-    val IContentScript.commands by dataKeyWithDefault { mutableListOf<CommandInfo>() }
-    val IContentScript.listens by dataKeyWithDefault { mutableListOf<ScriptListen<*>>() }
-    val IContentScript.bukkitTasks by dataKeyWithDefault { mutableListOf<BukkitRunnable>() }
+    val ISubScript.listener by dataKeyWithDefault { ScriptListener() }
+    val ISubScript.subCommands by dataKeyWithDefault { mutableListOf<CommandInfo>() }
+    val ISubScript.commands by dataKeyWithDefault { mutableListOf<CommandInfo>() }
+    val ISubScript.listens by dataKeyWithDefault { mutableListOf<ScriptListen<*>>() }
+    val ISubScript.bukkitTasks by dataKeyWithDefault { mutableListOf<BukkitRunnable>() }
 }
 
-val IContentScript.logger: Logger get() = Logger.getLogger("SA-$id")
+val ISubScript.logger: Logger get() = Logger.getLogger("SA-$id")
 @Deprecated("use CommandInfo instead")
-fun IContentScript.command(
+fun ISubScript.command(
         name: String,
         description: String,
         usage: String = "",
@@ -62,21 +61,22 @@ fun IContentScript.command(
         asSub: Boolean = true,
         executor: (s: CommandSender, arg: Array<out String>) -> Unit
 ) {
-    val cmd = CommandInfo(this, name, description, {
+    val cmd = CommandInfo(this, name, description) {
         this.usage = usage
         this.aliases = aliases
-    }) {
-        if (sender != null)
-            executor(sender!!, arg.toTypedArray())
+        body {
+            if (sender != null)
+                executor(sender!!, arg.toTypedArray())
+        }
     }
     (if (asSub) subCommands else commands).add(cmd)
 }
 
-fun IContentScript.command(name:String,description: String,other:CommandInfo.()->Unit, asSub: Boolean = true,executor: CommandContext.()->Unit){
-    (if (asSub) subCommands else commands).add(CommandInfo(this,name,description,other,executor))
+fun ISubScript.command(name:String,description: String, asSub: Boolean = true,other:CommandInfo.()->Unit){
+    (if (asSub) subCommands else commands).add(CommandInfo(this,name,description,other))
 }
 
-inline fun <reified T : Event> IContentScript.listen(
+inline fun <reified T : Event> ISubScript.listen(
         ignoreCancelled: Boolean = false,
         priority: EventPriority = EventPriority.NORMAL,
         noinline block: (T) -> Unit
@@ -87,7 +87,7 @@ inline fun <reified T : Event> IContentScript.listen(
 val Dispatchers.bukkit get() = ContentExt.BukkitSyncDispatcher
 
 @Deprecated("Recommend use launch(Dispatcher.bukkit)")
-fun IContentScript.createBukkitTask(autoCancel: Boolean = true, runH: BukkitRunnable.() -> Unit): BukkitRunnable {
+fun ISubScript.createBukkitTask(autoCancel: Boolean = true, runH: BukkitRunnable.() -> Unit): BukkitRunnable {
     val runnable = object : BukkitRunnable() {
         override fun run() {
             if (autoCancel) cancel()

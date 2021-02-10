@@ -1,11 +1,11 @@
 package superitem.lib
 
-import cf.wayzer.script_agent.IContentScript
+import cf.wayzer.script_agent.ISubScript
 import cf.wayzer.script_agent.util.DSLBuilder
 import org.bukkit.inventory.ItemStack
 import kotlin.reflect.KClass
 
-typealias Item = IContentScript
+typealias Item = ISubScript
 
 fun <T : Feature<out Any>> Item.require(feature: T): T {
     feature.bind(this)

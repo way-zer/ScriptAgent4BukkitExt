@@ -2,16 +2,14 @@
 
 package coreBukkit.lib
 
-import cf.wayzer.script_agent.Config
-import cf.wayzer.script_agent.IContentScript
-import cf.wayzer.script_agent.getContextModule
-import cf.wayzer.script_agent.listenTo
+import cf.wayzer.script_agent.*
 import cf.wayzer.script_agent.util.DSLBuilder
 import coreLibrary.lib.*
 import coreLibrary.lib.event.PermissionRequestEvent
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.command.*
+import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 object RootCommands : Commands() {
@@ -24,7 +22,7 @@ object RootCommands : Commands() {
                     }.let(sender::sendMessage)
                 }
                 this.sender = sender
-                prefix = "/$commandLabel"
+                prefix = "/$commandLabel "
                 arg = args.toList()
             })
             return true
@@ -35,7 +33,7 @@ object RootCommands : Commands() {
             info.invoke(CommandContext().apply {
                 this.sender = sender
                 replyTabComplete = { result = it;CommandInfo.Return() }
-                prefix = "/$alias"
+                prefix = "/$alias "
                 arg = args.toList()
             })
             return result
@@ -50,9 +48,9 @@ object RootCommands : Commands() {
         }
     }
 
-    override fun addSub(command: CommandInfo) {
-        if (command.name == "help") return
-        if (command.name == "ScriptAgent")
+    override fun addSub(name: String, command: CommandInfo, isAliases: Boolean) {
+        if(name == "help" || isAliases)return
+        if(name=="ScriptAgent")
             return Config.pluginCommand.run {
                 BukkitCommand(command).let {
                     setExecutor(it)
@@ -64,7 +62,7 @@ object RootCommands : Commands() {
         }
     }
 
-    override fun removeAll(script: IContentScript) {
+    override fun removeAll(script: ISubScript) {
         ModuleExt.getCommandMap().run {
             val knownCommands = SimpleCommandMap::class.java.getDeclaredField("knownCommands")
                     .apply { isAccessible = true }.get(this) as MutableMap<*, *>

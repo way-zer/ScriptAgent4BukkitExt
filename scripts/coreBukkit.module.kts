@@ -8,6 +8,7 @@ import coreBukkit.lib.ContentExt.listens
 import coreBukkit.lib.ContentExt.commands
 import coreBukkit.lib.ContentExt.subCommands
 import coreBukkit.lib.ContentExt.bukkitTasks
+import coreLibrary.lib.Commands
 import org.bukkit.Bukkit
 import org.bukkit.event.HandlerList
 

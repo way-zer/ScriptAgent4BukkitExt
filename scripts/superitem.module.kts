@@ -18,8 +18,6 @@ exportClass(SuperItemEvent::class.java)
 generateHelper()
 
 onEnable {
-    val rootDir = Config.pluginMain.dataFolder.resolve("Superitem")
-    rootDir.mkdirs()
     ConfigManager.init(Config.dataDirectory.resolve("superitem"))
 }
 

@@ -1,4 +1,4 @@
-val libraryVersion = "1.4.2"
+val libraryVersion = "1.4.3"
 val mcVersion = "1.14-R0.1-SNAPSHOT"
 val exposedVersionn = "0.29.1"
 
