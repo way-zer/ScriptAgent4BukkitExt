@@ -9,6 +9,10 @@ import org.bukkit.plugin.java.JavaPlugin
 class ScriptAgent4Bukkit : JavaPlugin() {
     init {
         ScriptAgent.load()
+        classLoader::class.java.getDeclaredField("remapper").apply {
+            isAccessible = true
+            set(classLoader,null)
+        }
     }
     override fun onEnable() {
         val dir = dataFolder

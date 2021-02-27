@@ -35,7 +35,8 @@ dependencies {
 
     //coreBukkit
     //也可以直接使用服务器正在使用的jar(使用NMS等)
-    api("org.spigotmc:spigot-api:$mcVersion")
+//    api("org.spigotmc:spigot-api:$mcVersion")
+    api(files("lib/Thermos-1.7.10-1614-57-server.jar"))
 
     //used by superitem
     api("de.tr7zw:item-nbt-api:2.2.0")
@@ -43,4 +44,9 @@ dependencies {
 
     //mirai
     api("net.mamoe:mirai-core-api-jvm:2.4.0")
+
+    //main/occupy
+    api(files("lib/VexView2.6.10.jar"))
+    api(files("lib/Vault.jar"))
+    api(files("lib/Residence4.9.1.9.jar"))
 }
