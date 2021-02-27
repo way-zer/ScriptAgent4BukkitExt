@@ -10,7 +10,6 @@ import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreLibrary.lib.*
 import coreLibrary.lib.event.PermissionRequestEvent
 import org.bukkit.ChatColor
-import org.bukkit.Location
 import org.bukkit.command.*
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
@@ -31,7 +30,7 @@ object RootCommands : Commands() {
             return true
         }
 
-        override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>, location: Location?): List<String> {
+        override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String> {
             var result: List<String> = emptyList()
 
             try {
@@ -51,7 +50,7 @@ object RootCommands : Commands() {
         }
 
         override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
-            return tabComplete(sender, alias, args, null)
+            return tabComplete(sender, alias, args)
         }
     }
 
@@ -60,7 +59,7 @@ object RootCommands : Commands() {
         if (name == "ScriptAgent")
             return Config.pluginCommand.run {
                 BukkitCommand(command).let {
-                    setExecutor(it)
+                    executor = it
                     tabCompleter = it
                 }
             }
