@@ -38,7 +38,7 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
             p.hasPermission(data) -> true
             else -> {
                 if (tip)
-                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent("§c你没有权限使用"))
+                    p.spigot().sendMessage(TextComponent("§c你没有权限使用"))
                 false
             }
         }
@@ -48,7 +48,7 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
         super.bind(item)
         item.listen<CraftItemEvent>(true) { e ->
             if (item.isItem(e.recipe.result) && !hasPermission(e.whoClicked as Player, false)) {
-                e.whoClicked.sendMessage("§c你没有权限合成这个物品")
+                (e.whoClicked as Player).sendMessage("§c你没有权限合成这个物品")
                 e.isCancelled = true
             }
         }

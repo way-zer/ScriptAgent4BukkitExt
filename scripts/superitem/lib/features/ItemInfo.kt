@@ -89,8 +89,8 @@ class ItemInfo(
             p.sendMessage("§c你身上没有足够的空位")
             return false
         }
-        inv.setItem(i, inv.itemInMainHand)
-        inv.setItemInMainHand(newItemStack(p))
+        inv.setItem(i, inv.itemInHand)
+        inv.itemInHand = newItemStack(p)
         p.updateInventory()
         return true
     }
