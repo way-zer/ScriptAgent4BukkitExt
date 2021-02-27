@@ -59,7 +59,7 @@ object RootCommands : Commands() {
         if (name == "ScriptAgent")
             return Config.pluginCommand.run {
                 BukkitCommand(command).let {
-                    executor = it
+                    setExecutor(it)
                     tabCompleter = it
                 }
             }

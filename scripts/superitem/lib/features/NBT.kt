@@ -1,6 +1,6 @@
 package superitem.lib.features
 
-import coreBukkit.lib.logger
+import coreLibrary.lib.logger
 import de.tr7zw.changeme.nbtapi.NBTCompound
 import de.tr7zw.changeme.nbtapi.NBTItem
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion

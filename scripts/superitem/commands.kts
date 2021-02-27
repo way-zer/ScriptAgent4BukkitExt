@@ -6,13 +6,19 @@ import org.bukkit.entity.Player
 
 name = "SuperItem 命令控制脚本"
 
-command("superitem", "SuperItem管理命令", "<list/get/give> [arg]", listOf("si")) { s, arg ->
-    if (arg.isEmpty()) return@command help(s)
-    when (arg[0].toLowerCase()) {
-        "list" -> listItem(s, arg)
-        "get" -> getItem(s, arg)
-        "give" -> giveItem(s, arg)
-        else -> help(s)
+command("superitem","SuperItem管理命令"){
+    usage = "<list/get/give> [arg]"
+    aliases = listOf("si")
+    body {
+        val s = sender!!
+        val arg = arg.toTypedArray()
+        if (arg.isEmpty()) return@body help(s)
+        when (arg[0].toLowerCase()) {
+            "list" -> listItem(s, arg)
+            "get" -> getItem(s, arg)
+            "give" -> giveItem(s, arg)
+            else -> help(s)
+        }
     }
 }
 
