@@ -1,8 +1,8 @@
 package coreBukkit.lib
 
-import cf.wayzer.script_agent.Config
-import cf.wayzer.script_agent.ISubScript
-import cf.wayzer.script_agent.util.DSLBuilder
+import cf.wayzer.scriptAgent.Config
+import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreBukkit.lib.ModuleExt.registerCls
 import coreBukkit.lib.ModuleExt.unregisterCls
 import org.bukkit.Bukkit

@@ -1,5 +1,5 @@
 name: ScriptAgent
-main: cf.wayzer.script_agent.ScriptAgent4Bukkit
+main: cf.wayzer.scriptAgent.ScriptAgent4Bukkit
 version: @version@
 author: Way__Zer
 description: description!

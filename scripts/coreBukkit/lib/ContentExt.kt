@@ -2,9 +2,9 @@
 
 package coreBukkit.lib
 
-import cf.wayzer.script_agent.Config
-import cf.wayzer.script_agent.ISubScript
-import cf.wayzer.script_agent.util.DSLBuilder.Companion.dataKeyWithDefault
+import cf.wayzer.scriptAgent.Config
+import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.util.DSLBuilder.Companion.dataKeyWithDefault
 import coreBukkit.lib.ContentExt.bukkitTasks
 import coreBukkit.lib.ContentExt.commands
 import coreBukkit.lib.ContentExt.listens
@@ -51,12 +51,11 @@ object ContentExt {
     val ISubScript.bukkitTasks by dataKeyWithDefault { mutableListOf<BukkitRunnable>() }
 }
 
-val ISubScript.logger: Logger get() = Logger.getLogger("SA-$id")
 @Deprecated("use CommandInfo instead")
 fun ISubScript.command(
         name: String,
         description: String,
-        usage: String = "",
+        usage: String,
         aliases: List<String> = listOf(),
         asSub: Boolean = true,
         executor: (s: CommandSender, arg: Array<out String>) -> Unit
@@ -92,7 +91,7 @@ fun ISubScript.createBukkitTask(autoCancel: Boolean = true, runH: BukkitRunnable
         override fun run() {
             if (autoCancel) cancel()
             runH(this)
-            if (autoCancel && isCancelled)
+            if (autoCancel && !enabled)
                 bukkitTasks.remove(this)
         }
     }

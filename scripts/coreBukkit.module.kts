@@ -1,7 +1,7 @@
 @file:ImportByClass("org.bukkit.Bukkit")
 @file:DependsModule("coreLibrary")
 
-import cf.wayzer.script_agent.Config
+import cf.wayzer.scriptAgent.Config
 import coreBukkit.lib.*
 import coreBukkit.lib.ContentExt.listener
 import coreBukkit.lib.ContentExt.listens

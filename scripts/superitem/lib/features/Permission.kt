@@ -1,6 +1,6 @@
 package superitem.lib.features
 
-import cf.wayzer.script_agent.Config
+import cf.wayzer.scriptAgent.Config
 import coreBukkit.lib.listen
 import coreBukkit.lib.pluginMain
 import net.md_5.bungee.api.ChatMessageType

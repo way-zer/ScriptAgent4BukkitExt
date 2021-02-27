@@ -1,9 +1,11 @@
-package cf.wayzer.script_agent
+package cf.wayzer.scriptAgent
 
-import cf.wayzer.script_agent.ConfigExt.pluginCommand
-import cf.wayzer.script_agent.ConfigExt.pluginMain
+import cf.wayzer.scriptAgent.ConfigExt.pluginCommand
+import cf.wayzer.scriptAgent.ConfigExt.pluginMain
+import cf.wayzer.scriptAgent.define.LoaderApi
 import org.bukkit.plugin.java.JavaPlugin
 
+@OptIn(LoaderApi::class)
 class ScriptAgent4Bukkit : JavaPlugin() {
     init {
         ScriptAgent.load()

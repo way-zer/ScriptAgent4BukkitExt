@@ -2,8 +2,11 @@
 
 package coreBukkit.lib
 
-import cf.wayzer.script_agent.*
-import cf.wayzer.script_agent.util.DSLBuilder
+import cf.wayzer.scriptAgent.Config
+import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.getContextScript
+import cf.wayzer.scriptAgent.listenTo
+import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreLibrary.lib.*
 import coreLibrary.lib.event.PermissionRequestEvent
 import org.bukkit.ChatColor
@@ -30,12 +33,16 @@ object RootCommands : Commands() {
 
         override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>, location: Location?): List<String> {
             var result: List<String> = emptyList()
-            info.invoke(CommandContext().apply {
-                this.sender = sender
-                replyTabComplete = { result = it;CommandInfo.Return() }
-                prefix = "/$alias "
-                arg = args.toList()
-            })
+
+            try {
+                info.onComplete(CommandContext().apply {
+                    this.sender = sender
+                    replyTabComplete = { result = it;CommandInfo.Return() }
+                    prefix = "/$alias "
+                    arg = args.toList()
+                })
+            } catch (e: CommandInfo.Return) {
+            }
             return result
         }
 
@@ -49,8 +56,8 @@ object RootCommands : Commands() {
     }
 
     override fun addSub(name: String, command: CommandInfo, isAliases: Boolean) {
-        if(name == "help" || isAliases)return
-        if(name=="ScriptAgent")
+        if (name == "help" || isAliases) return
+        if (name == "ScriptAgent")
             return Config.pluginCommand.run {
                 BukkitCommand(command).let {
                     setExecutor(it)
@@ -77,7 +84,7 @@ object RootCommands : Commands() {
     }
 
     init {
-        RootCommands::class.java.getContextModule()!!.apply {
+        RootCommands::class.java.getContextScript().apply {
             listenTo<PermissionRequestEvent> {
                 if (context.sender != null)
                     result = context.sender!!.hasPermission(permission)

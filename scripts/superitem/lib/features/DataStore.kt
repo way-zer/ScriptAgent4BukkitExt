@@ -1,6 +1,6 @@
 package superitem.lib.features
 
-import cf.wayzer.script_agent.Config
+import cf.wayzer.scriptAgent.Config
 import coreBukkit.lib.pluginMain
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.metadata.Metadatable

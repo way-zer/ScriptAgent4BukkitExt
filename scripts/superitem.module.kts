@@ -1,7 +1,7 @@
 @file:DependsModule("coreBukkit")
 @file:MavenDepends("de.tr7zw:item-nbt-api:2.2.0", "https://repo.codemc.org/repository/maven-public/")
 
-import cf.wayzer.script_agent.Config
+import cf.wayzer.scriptAgent.Config
 import coreLibrary.lib.dataDirectory
 import superitem.lib.*
 import superitem.lib.events.ItemStackHandleEvent

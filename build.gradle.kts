@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.4.20"
+    kotlin("jvm") version "1.4.30"
     id("me.qoomon.git-versioning") version "2.1.1"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
@@ -34,6 +34,10 @@ apply {
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf(
+                "-Xinline-classes",
+                "-Xopt-in=kotlin.RequiresOptIn"
+        )
     }
     withType<ProcessResources> {
         inputs.property("version", rootProject.version)

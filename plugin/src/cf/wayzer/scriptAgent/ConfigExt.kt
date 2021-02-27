@@ -1,6 +1,6 @@
-package cf.wayzer.script_agent
+package cf.wayzer.scriptAgent
 
-import cf.wayzer.script_agent.util.DSLBuilder
+import cf.wayzer.scriptAgent.util.DSLBuilder
 import org.bukkit.command.PluginCommand
 import org.bukkit.plugin.java.JavaPlugin
 
