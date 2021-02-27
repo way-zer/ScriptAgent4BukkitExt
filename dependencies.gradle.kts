@@ -45,8 +45,9 @@ dependencies {
     //mirai
     api("net.mamoe:mirai-core-api-jvm:2.4.0")
 
-    //main/occupy
+    //warage
+    implementation("com.google.guava:guava:18.0")
     api(files("lib/VexView2.6.10.jar"))
     api(files("lib/Vault.jar"))
-    api(files("lib/Residence4.9.1.9.jar"))
+    api(files("lib/1.7.10-Residence.jar"))
 }
