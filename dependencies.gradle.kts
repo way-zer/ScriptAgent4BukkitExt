@@ -40,4 +40,7 @@ dependencies {
     //used by superitem
     api("de.tr7zw:item-nbt-api:2.2.0")
     api("org.mapdb:mapdb:3.0.7")
+
+    //mirai
+    api("net.mamoe:mirai-core-api-jvm:2.4.0")
 }

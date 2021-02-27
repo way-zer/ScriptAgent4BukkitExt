@@ -29,12 +29,13 @@ This repository contains the loader and lots of strong scripts(use or for exampl
 
 ## 具体功能
 
-本仓库共含4个模块coreLib,core,main,superitem
+本仓库共含5个模块coreLib,core,main,superitem,mirai
 
 * coreLib为该框架的标准库
 * core为针对standalone的具体实现
 * main模块可用来存放简单脚本
 * superitem为一套自定义物品的库
+* mirai为qq机器人库mirai的脚本封装
 
 本仓库Wiki正在建设中，请参考查阅[姊妹仓库Wiki](https://github.com/way-zer/ScriptAgent4MindustryExt/wiki)
 
@@ -43,3 +44,4 @@ This repository contains the loader and lots of strong scripts(use or for exampl
 - 插件本体：未经许可禁止转载和用作其他用途
 - 脚本：归属脚本制作者，本仓库脚本转载需注明本页面链接
     - 脚本默认允许私人修改并使用，不允许修改原作者版权信息，公开请folk或引用该仓库(脚本作者声明优先)
+    - mirai模块及依赖该模块的所有代码，遵循AGPLv3协议
