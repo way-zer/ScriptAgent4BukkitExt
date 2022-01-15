@@ -1,10 +1,10 @@
 package coreLibrary.lib.event
 
 import cf.wayzer.scriptAgent.Event
-import cf.wayzer.scriptAgent.define.ISubScript
-import coreLibrary.lib.util.ServiceInterface
+import cf.wayzer.scriptAgent.define.Script
 
-class ServiceProvidedEvent<T : ServiceInterface>(val service: T, val provider: ISubScript) : Event {
+@Suppress("unused")
+class ServiceProvidedEvent<T : Any>(val service: T, val provider: Script) : Event {
     override val handler = Companion
 
     companion object : Event.Handler()

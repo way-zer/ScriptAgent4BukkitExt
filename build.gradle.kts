@@ -1,5 +1,7 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.4.30"
+    kotlin("jvm") version "1.6.10"
     id("me.qoomon.git-versioning") version "2.1.1"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
@@ -20,6 +22,7 @@ gitVersioning.apply(closureOf<me.qoomon.gradle.gitversioning.GitVersioningPlugin
 sourceSets {
     main {
         java.srcDir("scripts")
+        java.exclude("cache")
     }
     create("plugin") {
         java.srcDir("plugin/src")
@@ -31,37 +34,39 @@ apply {
     from("dependencies.gradle.kts")
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.freeCompilerArgs = listOf(
-                "-Xinline-classes",
-                "-Xopt-in=kotlin.RequiresOptIn"
+            "-Xinline-classes",
+            "-Xopt-in=kotlin.RequiresOptIn"
         )
     }
     withType<ProcessResources> {
         inputs.property("version", rootProject.version)
         filter(
-                filterType = org.apache.tools.ant.filters.ReplaceTokens::class,
-                properties = mapOf("tokens" to mapOf("version" to rootProject.version))
+            filterType = org.apache.tools.ant.filters.ReplaceTokens::class,
+            properties = mapOf("tokens" to mapOf("version" to rootProject.version))
         )
     }
     named<Delete>("clean") {
-        this.delete += fileTree("scripts").filter { it.name.endsWith(".cache.jar") }
-        this.delete += fileTree("scripts/cache")
+        delete(files("scripts/cache"))
     }
     create<Zip>("scriptsZip") {
         group = "plugin"
         from(sourceSets.main.get().allSource) {
-            exclude("*.ktc")
-            exclude("cache.jar")
+            exclude("cache")
             exclude(".metadata")
         }
         archiveClassifier.set("scripts")
     }
     create<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("buildPlugin") {
-        dependsOn("scriptsZip")
         group = "plugin"
+        dependsOn("scriptsZip")
         from(sourceSets.getByName("plugin").output)
         archiveClassifier.set("")
         archiveVersion.set(rootProject.version.toString().substringBeforeLast('.'))
@@ -69,6 +74,9 @@ tasks {
         dependencies {
             include(dependency("cf.wayzer:ScriptAgent"))
             include(dependency("cf.wayzer:LibraryManager"))
+        }
+        doLast {
+            println(archiveFileName.get())
         }
     }
 }

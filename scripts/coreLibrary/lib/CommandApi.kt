@@ -2,13 +2,12 @@
 
 package coreLibrary.lib
 
-import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.define.Script
 import cf.wayzer.scriptAgent.events.ScriptDisableEvent
-import cf.wayzer.scriptAgent.getContextScript
 import cf.wayzer.scriptAgent.listenTo
+import cf.wayzer.scriptAgent.thisContextScript
 import cf.wayzer.scriptAgent.util.DSLBuilder
-import coreLibrary.lib.event.PermissionRequestEvent
-import coreLibrary.lib.util.Provider
+import coreLibrary.lib.util.ServiceRegistry
 import coreLibrary.lib.util.menu
 import java.util.logging.Logger
 
@@ -20,17 +19,25 @@ class CommandContext : DSLBuilder(), Cloneable {
     // Should init if not empty
     var arg = emptyList<String>()
 
-    // Should init if need
+    /** use for arg like '-v' */
+    fun checkArg(p: String): Boolean {
+        if (p !in arg) return false
+        arg = arg.filterNot { it == p }
+        return true
+    }
+
+    /**
+     * message callback
+     * should support async, otherwise set to {} after use
+     * should support call from other thread, switch thread when need
+     */
     var reply: (msg: PlaceHoldString) -> Unit = {}
 
     // Should not null if do TabComplete
     var replyTabComplete: ((list: List<String>) -> Nothing)? = null
-    var hasPermission: (node: String) -> Boolean = {
-        PermissionRequestEvent(it, this).run {
-            emit()
-            result == true
-        }
-    }
+
+    // Should init in RootCommand
+    var hasPermission: (node: String) -> Boolean = { false }
 
     fun getSub(): CommandContext {
         return (clone() as CommandContext).apply {
@@ -41,6 +48,7 @@ class CommandContext : DSLBuilder(), Cloneable {
     }
 
     //===util===
+    /**Can't be call in coroutine or other context, use [reply] instead*/
     @CommandInfo.CommandBuilder
     fun returnReply(msg: PlaceHoldString): Nothing {
         reply(msg)
@@ -58,7 +66,7 @@ interface TabCompleter {
 }
 
 class CommandInfo(
-    val script: ISubScript?,
+    val script: Script?,
     val name: String,
     val description: String,
     init: CommandInfo.() -> Unit = {}
@@ -94,7 +102,7 @@ class CommandInfo(
             if (permission.isNotBlank() && !context.hasPermission(permission))
                 context.replyNoPermission()
             body.invoke(context)
-        } catch (e: Return) {
+        } catch (_: Return) {
         } catch (e: Exception) {
             context.reply("[red]执行命令出现异常: {msg}".with("msg" to (e.message ?: "")))
             e.printStackTrace()
@@ -132,7 +140,7 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
      */
     open fun getSubCommands(context: CommandContext?): Map<String, CommandInfo> = subCommands
     fun getSub(context: CommandContext): CommandInfo? {
-        return context.arg.getOrNull(0)?.let { getSubCommands(context)[it.toLowerCase()] }
+        return context.arg.getOrNull(0)?.let { getSubCommands(context)[it.lowercase()] }
     }
 
     override fun onComplete(context: CommandContext) {
@@ -145,18 +153,20 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
     }
 
     open fun onHelp(context: CommandContext, explicit: Boolean) {
-        val showDetail = context.arg.firstOrNull() == "-v"
-        val page = context.arg.lastOrNull()?.toIntOrNull() ?: 1
+        val showDetail = context.checkArg("-v")
+        if (showDetail && !context.hasPermission("command.detail"))
+            return context.reply("[red]必须拥有command.detail权限才能查看完整help".with())
+        val page = context.arg.firstOrNull()?.toIntOrNull() ?: 1
         context.reply(menu(context.prefix, getSubCommands(context).values.toSet().filter {
-            it.permission.isBlank() || context.hasPermission(it.permission)
+            showDetail || it.permission.isBlank() || context.hasPermission(it.permission)
         }, page, 10) {
             context.helpInfo(it, showDetail)
         })
     }
 
     protected open fun addSub(name: String, command: CommandInfo, isAliases: Boolean) {
-        val existed = subCommands[name.toLowerCase()]?.takeIf { it.script?.enabled == true } ?: let {
-            subCommands[name.toLowerCase()] = command
+        val existed = subCommands[name.lowercase()]?.takeIf { it.script?.enabled == true } ?: let {
+            subCommands[name.lowercase()] = command
             return
         }
         if (existed == command) return
@@ -164,12 +174,12 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
             Logger.getLogger("[CommandApi]").warning("duplicate aliases $name($command) with $existed")
         } else {
             Logger.getLogger("[CommandApi]").warning("replace command $name: NOW:$command OLD:$existed")
-            subCommands[name.toLowerCase()] = command //name is more important
+            subCommands[name.lowercase()] = command //name is more important
         }
     }
 
     open fun removeSub(name: String) {
-        subCommands.remove(name.toLowerCase())
+        subCommands.remove(name.lowercase())
     }
 
     fun addSub(command: CommandInfo) {
@@ -180,13 +190,13 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
     }
 
     fun removeSub(command: CommandInfo) {
-        subCommands.remove(command.name.toLowerCase(), command)
+        subCommands.remove(command.name.lowercase(), command)
         command.aliases.forEach {
-            subCommands.remove(it.toLowerCase(), command)
+            subCommands.remove(it.lowercase(), command)
         }
     }
 
-    open fun removeAll(script: ISubScript) {
+    open fun removeAll(script: Script) {
         val toRemove = mutableListOf<String>()
         subCommands.forEach { (k, s) ->
             if (s.script == script) toRemove.add(k)
@@ -195,7 +205,7 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
     }
 
     operator fun plusAssign(command: CommandInfo) = addSub(command)
-    fun autoRemove(script: ISubScript) {
+    fun autoRemove(script: Script) {
         script.onDisable {
             removeAll(script)
         }
@@ -213,19 +223,21 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
     }
 
     companion object {
-        val rootProvider = Provider<Commands>()
+        val rootProvider = ServiceRegistry<Commands>()
         val controlCommand = Commands()
 
         init {
-            rootProvider.every {
-                it += CommandInfo(null, "ScriptAgent", "ScriptAgent 控制指令") {
-                    aliases = listOf("sa")
-                    permission = "scriptAgent.admin"
-                    body(controlCommand)
+            thisContextScript().apply {
+                rootProvider.subscribe(this) {
+                    it += CommandInfo(null, "ScriptAgent", "ScriptAgent 控制指令") {
+                        aliases = listOf("sa")
+                        permission = "scriptAgent.admin"
+                        body(controlCommand)
+                    }
                 }
-            }
-            Commands::class.java.getContextScript().listenTo<ScriptDisableEvent> {
-                rootProvider.get()?.removeAll(script)
+                listenTo<ScriptDisableEvent> {
+                    rootProvider.getOrNull()?.removeAll(script)
+                }
             }
         }
 

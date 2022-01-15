@@ -3,19 +3,17 @@
 package coreBukkit.lib
 
 import cf.wayzer.scriptAgent.Config
-import cf.wayzer.scriptAgent.define.ISubScript
-import cf.wayzer.scriptAgent.getContextScript
-import cf.wayzer.scriptAgent.listenTo
+import cf.wayzer.scriptAgent.define.Script
 import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreLibrary.lib.*
-import coreLibrary.lib.event.PermissionRequestEvent
 import org.bukkit.ChatColor
 import org.bukkit.command.*
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 object RootCommands : Commands() {
-    class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases), CommandExecutor, TabCompleter {
+    class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases),
+        CommandExecutor, TabCompleter {
         override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
             info.invoke(CommandContext().apply {
                 reply = { msg ->
@@ -24,6 +22,7 @@ object RootCommands : Commands() {
                     }.let(sender::sendMessage)
                 }
                 this.sender = sender
+                hasPermission = { sender.hasPermission(it) }
                 prefix = "/$commandLabel "
                 arg = args.toList()
             })
@@ -36,20 +35,31 @@ object RootCommands : Commands() {
             try {
                 info.onComplete(CommandContext().apply {
                     this.sender = sender
+                    hasPermission = { sender.hasPermission(it) }
                     replyTabComplete = { result = it;CommandInfo.Return() }
                     prefix = "/$alias "
                     arg = args.toList()
                 })
-            } catch (e: CommandInfo.Return) {
+            } catch (_: CommandInfo.Return) {
             }
             return result
         }
 
-        override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        override fun onCommand(
+            sender: CommandSender,
+            command: Command,
+            label: String,
+            args: Array<out String>
+        ): Boolean {
             return execute(sender, label, args)
         }
 
-        override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
+        override fun onTabComplete(
+            sender: CommandSender,
+            command: Command,
+            alias: String,
+            args: Array<out String>
+        ): List<String> {
             return tabComplete(sender, alias, args)
         }
     }
@@ -68,10 +78,10 @@ object RootCommands : Commands() {
         }
     }
 
-    override fun removeAll(script: ISubScript) {
+    override fun removeAll(script: Script) {
         ModuleExt.getCommandMap().run {
             val knownCommands = SimpleCommandMap::class.java.getDeclaredField("knownCommands")
-                    .apply { isAccessible = true }.get(this) as MutableMap<*, *>
+                .apply { isAccessible = true }.get(this) as MutableMap<*, *>
             val toRemove = mutableListOf<Any?>()
             knownCommands.forEach { (k, v) ->
                 if (v is BukkitCommand && v.info.script == script) {
@@ -79,15 +89,6 @@ object RootCommands : Commands() {
                 }
             }
             toRemove.forEach { knownCommands.remove(it) }
-        }
-    }
-
-    init {
-        RootCommands::class.java.getContextScript().apply {
-            listenTo<PermissionRequestEvent> {
-                if (context.sender != null)
-                    result = context.sender!!.hasPermission(permission)
-            }
         }
     }
 

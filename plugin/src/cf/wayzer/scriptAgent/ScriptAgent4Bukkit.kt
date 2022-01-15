@@ -9,14 +9,16 @@ import org.bukkit.plugin.java.JavaPlugin
 class ScriptAgent4Bukkit : JavaPlugin() {
     init {
         ScriptAgent.load()
+        Config.rootDir = dataFolder
+        if (!dataFolder.exists()) dataFolder.mkdirs()
     }
+
     override fun onEnable() {
-        val dir = dataFolder
-        if(!dir.exists())dir.mkdirs()
         Config.logger = logger
         Config.pluginMain = this
         Config.pluginCommand = getCommand("ScriptAgent")
-        ScriptManager.loadDir(dir)
+        ScriptRegistry.scanRoot()
+        ScriptManager.loadAll(true)
     }
 
     override fun onDisable() {

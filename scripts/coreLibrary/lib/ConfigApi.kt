@@ -10,7 +10,8 @@ package coreLibrary.lib
  * val welcomeMsg by config.key("Hello Steve","The message show when player join")
  * println(welcomeMsg)
  */
-import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.Event
+import cf.wayzer.scriptAgent.define.Script
 import cf.wayzer.scriptAgent.events.ScriptDisableEvent
 import cf.wayzer.scriptAgent.getContextScript
 import cf.wayzer.scriptAgent.listenTo
@@ -25,7 +26,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.reflect.KProperty
 
-open class ConfigBuilder(private val path: String, val script: ISubScript?) {
+open class ConfigBuilder(private val path: String, val script: Script?) {
     /**
      * @param desc only display the first line using command
      */
@@ -126,7 +127,7 @@ open class ConfigBuilder(private val path: String, val script: ISubScript?) {
 
     //internal
     fun <T : Any> key(
-        script: ISubScript, name: String,
+        script: Script, name: String,
         cls: ClassContainer, default: T, vararg desc: String,
         onChange: ((T) -> Unit)?
     ): ConfigKey<T> {
@@ -144,8 +145,8 @@ open class ConfigBuilder(private val path: String, val script: ISubScript?) {
      */
     inline fun <reified T : Any> key(default: T, vararg desc: String) =
         DSLBuilder.Companion.ProvideDelegate<Any?, ConfigKey<T>> { obj, name ->
-            val script: ISubScript = when {
-                obj is ISubScript -> obj
+            val script: Script = when {
+                obj is Script -> obj
                 this.script != null -> this.script
                 else -> error("Can't get script in context")
             }
@@ -169,14 +170,14 @@ open class ConfigBuilder(private val path: String, val script: ISubScript?) {
     companion object {
         private val renderConfig = ConfigRenderOptions.defaults().setOriginComments(false)
         private val key_configs = DSLBuilder.DataKeyWithDefault("configs") { mutableSetOf<ConfigKey<*>>() }
-        val ISubScript.configs by key_configs
+        val Script.configs by key_configs
         val all = mutableMapOf<String, ConfigKey<*>>()
-        var configFile: File = cf.wayzer.scriptAgent.Config.dataDirectory.resolve("config.conf")
+        var configFile: File = cf.wayzer.scriptAgent.Config.dataDir.resolve("config.conf")
         private lateinit var fileConfig: Config
         private var lastLoad: Long = -1
 
         init {
-            ConfigBuilder::class.java.getContextScript().listenTo<ScriptDisableEvent>(2) {
+            ConfigBuilder::class.java.getContextScript().listenTo<ScriptDisableEvent>(Event.Priority.Before) {
                 key_configs.apply {
                     script.get()?.forEach { all.remove(it.path) }
                 }
@@ -208,4 +209,4 @@ open class ConfigBuilder(private val path: String, val script: ISubScript?) {
 }
 
 val globalConfig = ConfigBuilder("global", null)
-val ISubScript.config get() = ConfigBuilder(id.replace('/', '.'), this)
+val Script.config get() = ConfigBuilder(id.replace('/', '.'), this)

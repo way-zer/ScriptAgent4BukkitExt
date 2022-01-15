@@ -3,8 +3,9 @@ main: cf.wayzer.scriptAgent.ScriptAgent4Bukkit
 version: @version@
 author: Way__Zer
 description: description!
+api-version: 1.18
 commands: 
-  ScriptAgent:
+  scriptAgent:
     description: ScriptAgent Main Command
     usage: Please load coreBukkit module to use command
     aliases: ["sa"]
