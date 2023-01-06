@@ -21,6 +21,6 @@ object SIManager {
      * 通过 Item.class.simpleName 查询Item
      */
     fun getItem(className: String): Item? {
-        return items[className.toUpperCase()]
+        return items[className.uppercase()]
     }
 }

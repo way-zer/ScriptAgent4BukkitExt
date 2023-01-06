@@ -18,11 +18,11 @@ import superitem.lib.events.ItemStackHandleEvent
  * @param loadOther 为物品设置其他属性
  */
 class ItemInfo(
-        private val defaultMaterial: Material,
-        private val defaultName: String,
-        private val defaultLore: List<String>,
-        private val defaultDamage: Short = 0,
-        private val loadOther: (ItemMeta, ItemStack) -> Unit = { _, _ -> }
+    private val defaultMaterial: Material,
+    private val defaultName: String,
+    private val defaultLore: List<String>,
+    private val defaultDamage: Short = 0,
+    private val loadOther: (ItemMeta, ItemStack) -> Unit = { _, _ -> }
 ) : Feature<ItemInfo.Data>(), Feature.OnPostLoad {
     interface ItemStackHandler : ((ItemStack, Player?) -> Unit)
 
@@ -36,10 +36,10 @@ class ItemInfo(
         get() = Data(defaultMaterial, defaultDamage, defaultName, defaultLore)
 
     data class Data(
-            val material: Material,
-            val data: Short,
-            val name: String,
-            val lore: List<String>
+        val material: Material,
+        val data: Short,
+        val name: String,
+        val lore: List<String>
     )
 
     /**

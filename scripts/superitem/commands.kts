@@ -6,14 +6,14 @@ import org.bukkit.entity.Player
 
 name = "SuperItem 命令控制脚本"
 
-command("superitem","SuperItem管理命令"){
+command("superitem", "SuperItem管理命令") {
     usage = "<list/get/give> [arg]"
     aliases = listOf("si")
     body {
         val s = sender!!
         val arg = arg.toTypedArray()
         if (arg.isEmpty()) return@body help(s)
-        when (arg[0].toLowerCase()) {
+        when (arg[0].lowercase()) {
             "list" -> listItem(s, arg)
             "get" -> getItem(s, arg)
             "give" -> giveItem(s, arg)
@@ -53,8 +53,12 @@ fun listItem(s: CommandSender, args: Array<out String>) {
     while (i < list.size && i < pages * 10) {
         val itemName = if (!list[i].second.has<ItemInfo>()) "§c NO_ITEM"
         else list[i].second.get<ItemInfo>().newItemStack().itemMeta?.displayName
-        s.sendMessage(String.format("§e%03d §a|§e %-20s §a|§e %s",
-                i, list[i].first, itemName))
+        s.sendMessage(
+            String.format(
+                "§e%03d §a|§e %-20s §a|§e %s",
+                i, list[i].first, itemName
+            )
+        )
         i++
     }
     s.sendMessage("§a================   §7$pages/$maxPages   §a================")

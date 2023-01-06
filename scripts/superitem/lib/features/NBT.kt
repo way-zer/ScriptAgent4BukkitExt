@@ -61,7 +61,7 @@ class NBT(override vararg val defaultData: AttributeModifier) : Feature<Array<ou
                 val node = nbt.addCompound()
                 node.setString("AttributeName", attr.type.attributeName)
                 node.setString("Name", "SuperItem NBT ${attr.type.name}")
-                attr.slot?.let { node.setString("Slot", it.name.toLowerCase()) }
+                attr.slot?.let { node.setString("Slot", it.name.lowercase()) }
                 node.setInteger("Operation", attr.operation.ordinal)
                 node.setDouble("Amount", attr.amount)
                 node.setInteger("UUIDLeast", 894654)

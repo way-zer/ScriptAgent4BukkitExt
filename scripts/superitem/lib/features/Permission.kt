@@ -34,14 +34,10 @@ class Permission(private val default: String? = null) : Feature<String>(), Liste
      * @param tip 是否发送提示
      */
     fun hasPermission(p: Player, tip: Boolean = true): Boolean {
-        return when {
-            p.hasPermission(data) -> true
-            else -> {
-                if (tip)
-                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent("§c你没有权限使用"))
-                false
-            }
-        }
+        if (p.hasPermission(data)) return true
+        if (tip)
+            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent("§c你没有权限使用"))
+        return false
     }
 
     override fun bind(item: Item) {

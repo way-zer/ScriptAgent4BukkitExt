@@ -37,9 +37,10 @@ dependencies {
     //coreBukkit
     //也可以直接使用服务器正在使用的jar(使用NMS等)
     api("io.papermc.paper:paper-api:$mcVersion")
+    api("net.kyori:adventure-api:4.9.3")
 
     //used by superitem
-    api("de.tr7zw:item-nbt-api:2.2.0")
+    api("de.tr7zw:item-nbt-api:2.8.0")
     api("org.mapdb:mapdb:3.0.7")
 
     //mirai
