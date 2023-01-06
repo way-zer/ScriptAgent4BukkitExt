@@ -8,17 +8,21 @@ package coreLibrary.lib
  * 暴露数据或接口时,注意类型所在的生命周期
  */
 
-import cf.wayzer.placehold.DynamicVar
-import cf.wayzer.placehold.PlaceHoldApi
-import cf.wayzer.placehold.PlaceHoldContext
-import cf.wayzer.placehold.TypeBinder
+import cf.wayzer.placehold.*
 import cf.wayzer.scriptAgent.define.Script
+import cf.wayzer.scriptAgent.define.ScriptDsl
 import cf.wayzer.scriptAgent.util.DSLBuilder
+import coreLibrary.lib.PlaceHold.Updatable
+import coreLibrary.lib.PlaceHold.dumbTemplateHandler
 import kotlin.reflect.KProperty
 
 typealias PlaceHoldString = PlaceHoldContext
 
 object PlaceHold {
+    fun interface Updatable<T> {
+        fun update(v: T)
+    }
+
     class PlaceHoldKey<T>(val name: String, private val cls: Class<T>) {
         operator fun getValue(thisRef: Any?, prop: KProperty<*>): T {
             val v = PlaceHoldApi.GlobalContext.getVar(name)
@@ -29,25 +33,27 @@ object PlaceHold {
 
     class TypePlaceHoldKey<R>(val name: String, private val cls: Class<R>) {
         operator fun <T : Any> getValue(thisRef: T, prop: KProperty<*>): R {
-            val v = PlaceHoldApi.GlobalContext.typeResolve(thisRef, name)
+            val v = PlaceHoldApi.GlobalContext.resolveVar(thisRef, name)
             if (cls.isInstance(v)) return cls.cast(v)
             error("Can't get typeVar $name: FROM $thisRef GET $v")
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     class ScriptTypeBinder<T : Any>(
         private val script: Script,
         private val namePrefix: String,
         private val binder: TypeBinder<T>
     ) {
-        fun registerChild(key: String, desc: String, body: DynamicVar<T, Any>) {
-            script.registeredVars["$namePrefix.$key"] = desc
-            binder.registerChild(key, body)
-        }
+        fun registerToString(desc: String, body: DynamicVar<T, String>) =
+            registerChildAny(PlaceHoldContext.ToString, desc, body)
 
-        fun registerToString(desc: String, body: DynamicVar<T, String>) {
-            script.registeredVars["$namePrefix.toString"] = desc
-            binder.registerToString(body)
+        fun registerChild(key: String, desc: String, body: DynamicVar<T, Any>) = registerChildAny(key, desc, body)
+        fun registerChildAny(key: String, desc: String, body: Any?) {
+            script.registeredVars["$namePrefix.$key"] = desc
+            script.onEnable { binder.registerChildAny(key, body) }
+            if (body != null)
+                script.onDisable { binder.registerChildAny(key, null) }
         }
     }
 
@@ -57,9 +63,11 @@ object PlaceHold {
     /**
      * @param v support [cf.wayzer.placehold.DynamicVar] even [PlaceHoldString] or any value
      */
-    fun register(script: Script, name: String, desc: String, v: Any?) {
-        PlaceHoldApi.registerGlobalVar(name, v)
+    fun register(script: Script, name: String, desc: String, v: Any?): Updatable<Any?> {
         script.registeredVars[name] = desc
+        script.onEnable { PlaceHoldApi.registerGlobalVar(name, v) }
+        script.onDisable { PlaceHoldApi.registerGlobalVar(name, null) }
+        return Updatable { PlaceHoldApi.registerGlobalVar(name, it) }
     }
 
     /**
@@ -92,16 +100,24 @@ object PlaceHold {
      * player.money //get variable
      */
     inline fun <reified R> referenceForType(name: String) = TypePlaceHoldKey(name, R::class.java)
+
+    internal val dumbTemplateHandler = TemplateHandler { _, text -> text }
 }
 
 /**
  * @param arg values support [cf.wayzer.placehold.DynamicVar] even [PlaceHoldString] or any value
  */
 fun String.with(vararg arg: Pair<String, Any>): PlaceHoldString = PlaceHoldApi.getContext(this, arg.toMap())
+fun PlaceHoldString.with(vararg arg: Pair<String, Any>): PlaceHoldString =
+    "".with(*arg).createChild(text, vars)
+
+/** Convert String to PlaceHoldString with no PlaceHold and templateHandler */
+fun String.asPlaceHoldString() = "{text}".with("text" to this, TemplateHandlerKey to dumbTemplateHandler)
 
 /**
  * @see PlaceHold.register
  */
+@ScriptDsl
 fun Script.registerVar(name: String, desc: String, v: Any?) = PlaceHold.register(this, name, desc, v)
 
 /**
@@ -114,4 +130,5 @@ inline fun <reified T : Any> Script.registerVarForType(desc: String) = PlaceHold
 /**
  * @see PlaceHold.registerForType
  */
+@ScriptDsl
 inline fun <reified T : Any> Script.registerVarForType() = PlaceHold.registerForType<T>(this)

@@ -1,8 +1,10 @@
 package mirai
 
+import net.mamoe.mirai.Bot
+
 val groupId by config.key(0L, "广播的群号,0代表不启用")
 
-fun broadcast(msg:String){
+fun broadcast(msg: String) {
     if (groupId <= 0) return
     Bot.instancesSequence.forEach {
         launch {

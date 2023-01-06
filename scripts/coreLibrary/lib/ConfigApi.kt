@@ -10,9 +10,8 @@ package coreLibrary.lib
  * val welcomeMsg by config.key("Hello Steve","The message show when player join")
  * println(welcomeMsg)
  */
-import cf.wayzer.scriptAgent.Event
 import cf.wayzer.scriptAgent.define.Script
-import cf.wayzer.scriptAgent.events.ScriptDisableEvent
+import cf.wayzer.scriptAgent.events.ScriptStateChangeEvent
 import cf.wayzer.scriptAgent.getContextScript
 import cf.wayzer.scriptAgent.listenTo
 import cf.wayzer.scriptAgent.util.DSLBuilder
@@ -58,12 +57,8 @@ open class ConfigBuilder(private val path: String, val script: Script?) {
         }
 
         fun set(v: T) {
-            fileConfig = fileConfig.withValue(
-                path,
-                v.toConfigValue().withOrigin(ConfigOriginFactory.newSimple().withComments(desc))
-            )
             cache(v)
-            saveFile()
+            modifyFile(path, v.toConfigValue().withOrigin(ConfigOriginFactory.newSimple().withComments(desc)))
         }
 
         /**
@@ -172,21 +167,35 @@ open class ConfigBuilder(private val path: String, val script: Script?) {
         private val key_configs = DSLBuilder.DataKeyWithDefault("configs") { mutableSetOf<ConfigKey<*>>() }
         val Script.configs by key_configs
         val all = mutableMapOf<String, ConfigKey<*>>()
+        var configBaseFile: File = cf.wayzer.scriptAgent.Config.dataDir.resolve("config.base.conf")
         var configFile: File = cf.wayzer.scriptAgent.Config.dataDir.resolve("config.conf")
         private lateinit var fileConfig: Config
+        private lateinit var rawConfig: Config
+        fun setRawConfig(raw: Config) {
+            rawConfig = raw
+            val base =
+                if (configBaseFile.exists()) ConfigFactory.parseFile(configBaseFile) else ConfigFactory.empty()
+            fileConfig = raw
+                .withFallback(ConfigFactory.systemProperties())
+                .withFallback(ConfigFactory.systemEnvironment())
+                .withFallback(base)
+        }
+
         private var lastLoad: Long = -1
 
         init {
-            ConfigBuilder::class.java.getContextScript().listenTo<ScriptDisableEvent>(Event.Priority.Before) {
-                key_configs.apply {
-                    script.get()?.forEach { all.remove(it.path) }
-                }
+            ConfigBuilder::class.java.getContextScript().listenTo<ScriptStateChangeEvent> {
+                //when unload
+                if (script.scriptState.loaded && !next.loaded)
+                    key_configs.apply {
+                        script.inst?.get()?.forEach { all.remove(it.path) }
+                    }
             }
             reloadFile()
         }
 
         fun reloadFile() {
-            fileConfig = ConfigFactory.parseFile(configFile)
+            setRawConfig(ConfigFactory.parseFile(configFile))
             lastLoad = System.currentTimeMillis()
             all.values.forEach {
                 try {
@@ -197,8 +206,15 @@ open class ConfigBuilder(private val path: String, val script: Script?) {
             }
         }
 
+        fun modifyFile(path: String, value: ConfigValue?, save: Boolean = true) {
+            setRawConfig(rawConfig.run {
+                if (value != null) withValue(path, value) else withoutPath(path)
+            })
+            if (save) saveFile()
+        }
+
         fun saveFile() {
-            configFile.writeText(fileConfig.root().render(renderConfig))
+            configFile.writeText(rawConfig.root().render(renderConfig))
         }
 
         inline fun <reified T : Any> ClassContainer(): ClassContainer {

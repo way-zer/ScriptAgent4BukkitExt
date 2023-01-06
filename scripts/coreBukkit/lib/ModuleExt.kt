@@ -1,7 +1,7 @@
 package coreBukkit.lib
 
 import cf.wayzer.scriptAgent.Config
-import cf.wayzer.scriptAgent.define.ISubScript
+import cf.wayzer.scriptAgent.define.Script
 import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreBukkit.lib.ModuleExt.registerCls
 import coreBukkit.lib.ModuleExt.unregisterCls
@@ -29,7 +29,7 @@ object ModuleExt{
 }
 val Config.pluginMain by DSLBuilder.dataKeyWithDefault<JavaPlugin>{ error("pluginMain can't be null") }
 val Config.pluginCommand by DSLBuilder.dataKeyWithDefault<PluginCommand>{ error("pluginCommand can't be null") }
-fun ISubScript.exportClass(clazz: Class<*>){
+fun Script.exportClass(clazz: Class<*>){
     onEnable(1){
         registerCls(clazz)
     }

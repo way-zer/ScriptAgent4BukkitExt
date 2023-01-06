@@ -2,15 +2,18 @@
 
 package coreLibrary.lib
 
+import cf.wayzer.placehold.DynamicVar
 import cf.wayzer.scriptAgent.define.Script
 import cf.wayzer.scriptAgent.events.ScriptDisableEvent
 import cf.wayzer.scriptAgent.listenTo
 import cf.wayzer.scriptAgent.thisContextScript
 import cf.wayzer.scriptAgent.util.DSLBuilder
+import coreLibrary.lib.PlaceHold.registerForType
 import coreLibrary.lib.util.ServiceRegistry
 import coreLibrary.lib.util.menu
+import java.util.logging.Level
 import java.util.logging.Logger
-
+import kotlin.coroutines.cancellation.CancellationException
 
 class CommandContext : DSLBuilder(), Cloneable {
     // Should init if not empty
@@ -37,7 +40,7 @@ class CommandContext : DSLBuilder(), Cloneable {
     var replyTabComplete: ((list: List<String>) -> Nothing)? = null
 
     // Should init in RootCommand
-    var hasPermission: (node: String) -> Boolean = { false }
+    var hasPermission: suspend (node: String) -> Boolean = { false }
 
     fun getSub(): CommandContext {
         return (clone() as CommandContext).apply {
@@ -54,11 +57,23 @@ class CommandContext : DSLBuilder(), Cloneable {
         reply(msg)
         CommandInfo.Return()
     }
+
+    /** receiver for reply */
+    object ConsoleReceiver {
+        init {
+            registerForType<ConsoleReceiver>(thisContextScript()).apply {
+                registerChild("colorHandler", "颜色变量处理", DynamicVar.obj {
+                    Color::convertToAnsiCode
+                })
+            }
+        }
+    }
 }
-typealias CommandHandler = CommandContext.() -> Unit
+
+typealias CommandHandler = suspend CommandContext.() -> Unit
 
 interface TabCompleter {
-    fun onComplete(context: CommandContext)
+    suspend fun onComplete(context: CommandContext)
     fun CommandContext.onComplete(index: Int, body: () -> List<String>) {
         if (arg.size == index + 1)
             replyTabComplete?.invoke(body())
@@ -68,9 +83,12 @@ interface TabCompleter {
 class CommandInfo(
     val script: Script?,
     val name: String,
-    val description: String,
-    init: CommandInfo.() -> Unit = {}
-) : DSLBuilder(), (CommandContext) -> Unit, TabCompleter {
+    val description: PlaceHoldString,
+    init: CommandInfo.() -> Unit
+) : DSLBuilder(), CommandHandler, TabCompleter {
+    constructor(script: Script?, name: String, description: String, init: CommandInfo.() -> Unit = {})
+            : this(script, name, description.with(), init)
+
     var usage = ""
     var aliases = emptyList<String>()
     var permission = ""
@@ -92,17 +110,21 @@ class CommandInfo(
         this.init()
     }
 
-    override fun onComplete(context: CommandContext) {
+    override suspend fun onComplete(context: CommandContext) {
         onComplete.invoke(context)
         (body as? TabCompleter)?.onComplete(context)
     }
 
-    override fun invoke(context: CommandContext) {
+    override suspend fun invoke(context: CommandContext) {
         try {
             if (permission.isNotBlank() && !context.hasPermission(permission))
                 context.replyNoPermission()
-            body.invoke(context)
-        } catch (_: Return) {
+            body(context)
+        } catch (e: CancellationException) {
+            if (e !is Return)
+                thisContextScript().logger.log(
+                    Level.WARNING, "You should not cancel command. If you need exit, using CommandInfo.Return()", e
+                )
         } catch (e: Exception) {
             context.reply("[red]执行命令出现异常: {msg}".with("msg" to (e.message ?: "")))
             e.printStackTrace()
@@ -121,7 +143,7 @@ class CommandInfo(
         Return()
     }
 
-    object Return : Throwable("Direct return command") {
+    object Return : CancellationException("Direct return command") {
         @CommandBuilder
         operator fun invoke(): Nothing {
             throw this
@@ -132,7 +154,7 @@ class CommandInfo(
     annotation class CommandBuilder
 }
 
-open class Commands : (CommandContext) -> Unit, TabCompleter {
+open class Commands : CommandHandler, TabCompleter {
     protected val subCommands = mutableMapOf<String, CommandInfo>()
 
     /**
@@ -143,26 +165,17 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
         return context.arg.getOrNull(0)?.let { getSubCommands(context)[it.lowercase()] }
     }
 
-    override fun onComplete(context: CommandContext) {
+    override suspend fun onComplete(context: CommandContext) {
         context.onComplete(0) { getSubCommands(context).keys.toList() }
         getSub(context)?.onComplete(context.getSub())
     }
 
-    override operator fun invoke(context: CommandContext) {
-        getSub(context)?.invoke(context.getSub()) ?: onHelp(context, false)
+    override suspend fun invoke(context: CommandContext) {
+        getSub(context)?.invoke(context.getSub())
+            ?: onHelp(context, false)
     }
 
-    open fun onHelp(context: CommandContext, explicit: Boolean) {
-        val showDetail = context.checkArg("-v")
-        if (showDetail && !context.hasPermission("command.detail"))
-            return context.reply("[red]必须拥有command.detail权限才能查看完整help".with())
-        val page = context.arg.firstOrNull()?.toIntOrNull() ?: 1
-        context.reply(menu(context.prefix, getSubCommands(context).values.toSet().filter {
-            showDetail || it.permission.isBlank() || context.hasPermission(it.permission)
-        }, page, 10) {
-            context.helpInfo(it, showDetail)
-        })
-    }
+    open suspend fun onHelp(context: CommandContext, explicit: Boolean) = defaultHelpImpl(context, explicit)
 
     protected open fun addSub(name: String, command: CommandInfo, isAliases: Boolean) {
         val existed = subCommands[name.lowercase()]?.takeIf { it.script?.enabled == true } ?: let {
@@ -212,7 +225,7 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
     }
 
     init {
-        addSub(CommandInfo(null, "help", "帮助指令") {
+        addSub(CommandInfo(null, "help", "帮助指令".with()) {
             usage = "[-v] [page]"
             aliases = listOf("帮助")
             body {
@@ -229,7 +242,7 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
         init {
             thisContextScript().apply {
                 rootProvider.subscribe(this) {
-                    it += CommandInfo(null, "ScriptAgent", "ScriptAgent 控制指令") {
+                    it += CommandInfo(null, "ScriptAgent", "ScriptAgent 控制指令".with()) {
                         aliases = listOf("sa")
                         permission = "scriptAgent.admin"
                         body(controlCommand)
@@ -245,8 +258,7 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
             val alias = if (it.aliases.isEmpty()) "" else it.aliases.joinToString(prefix = "(", postfix = ")")
             val detail = buildString {
                 if (!showDetail) return@buildString
-                @Suppress("UNNECESSARY_SAFE_CALL")//Runtime compile fail
-                if (it.script != null) append(" | ${it.script?.id}")
+                if (it.script != null) append(" | ${it.script.id}")
                 if (it.permission.isNotBlank()) append(" | ${it.permission}")
             }
             return "[light_yellow]{prefix}{name}[light_red]{aliases} [white]{usage}  [light_cyan]{desc}[cyan]{detail}".with(
@@ -254,5 +266,21 @@ open class Commands : (CommandContext) -> Unit, TabCompleter {
                 "usage" to it.usage, "desc" to it.description, "detail" to detail
             )
         }
+
+        var defaultHelpImpl: suspend Commands.(CommandContext, explicit: Boolean) -> Unit =
+            impl@{ context, explicit ->
+                if (context.arg.isNotEmpty() && !explicit)
+                    return@impl context.reply("[red]无效指令,请使用/help查询".with())
+                val showDetail = context.checkArg("-v")
+                if (showDetail && !context.hasPermission("command.detail"))
+                    return@impl context.reply("[red]必须拥有command.detail权限才能查看完整help".with())
+
+                val page = context.arg.firstOrNull()?.toIntOrNull() ?: 1
+                context.reply(menu(context.prefix, getSubCommands(context).values.toSet().filter {
+                    showDetail || it.permission.isBlank() || context.hasPermission(it.permission)
+                }, page, 10) {
+                    context.helpInfo(it, showDetail)
+                })
+            }
     }
 }

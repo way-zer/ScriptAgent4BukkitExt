@@ -4,43 +4,53 @@ package coreBukkit.lib
 
 import cf.wayzer.scriptAgent.Config
 import cf.wayzer.scriptAgent.define.Script
+import cf.wayzer.scriptAgent.thisContextScript
 import cf.wayzer.scriptAgent.util.DSLBuilder
 import coreLibrary.lib.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.bukkit.ChatColor
 import org.bukkit.command.*
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 object RootCommands : Commands() {
-    class BukkitCommand(val info: CommandInfo) : Command(info.name, info.description, info.usage, info.aliases),
+    private val script = thisContextScript()
+
+    class BukkitCommand(val info: CommandInfo) :
+        Command(info.name, info.description.toString(), info.usage, info.aliases),
         CommandExecutor, TabCompleter {
         override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
-            info.invoke(CommandContext().apply {
-                reply = { msg ->
-                    "{msg}".with("msg" to msg, "player" to sender).toString().let {
-                        ColorApi.handle(it, ::minecraftColorHandler)
-                    }.let(sender::sendMessage)
-                }
-                this.sender = sender
-                hasPermission = { sender.hasPermission(it) }
-                prefix = "/$commandLabel "
-                arg = args.toList()
-            })
+            script.launch(Dispatchers.game) {
+                info.invoke(CommandContext().apply {
+                    reply = { msg ->
+                        msg.with("receiver" to sender, "player" to sender).toString()
+                            .let { ColorApi.handle(it, ::minecraftColorHandler) }
+                            .let(sender::sendMessage)
+                    }
+                    this.sender = sender
+                    hasPermission = { sender.hasPermission(it) }
+                    prefix = "/$commandLabel "
+                    arg = args.toList()
+                })
+            }
             return true
         }
 
         override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): List<String> {
             var result: List<String> = emptyList()
 
-            try {
-                info.onComplete(CommandContext().apply {
-                    this.sender = sender
-                    hasPermission = { sender.hasPermission(it) }
-                    replyTabComplete = { result = it;CommandInfo.Return() }
-                    prefix = "/$alias "
-                    arg = args.toList()
-                })
-            } catch (_: CommandInfo.Return) {
+            BukkitDispatcher.safeBlocking {
+                try {
+                    info.onComplete(CommandContext().apply {
+                        this.sender = sender
+                        hasPermission = { sender.hasPermission(it) }
+                        replyTabComplete = { result = it;CommandInfo.Return() }
+                        prefix = "/$alias "
+                        arg = args.toList()
+                    })
+                } catch (_: CommandInfo.Return) {
+                }
             }
             return result
         }
